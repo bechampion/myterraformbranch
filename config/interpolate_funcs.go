@@ -71,6 +71,7 @@ func Funcs() map[string]ast.Function {
 		"compact":      interpolationFuncCompact(),
 		"concat":       interpolationFuncConcat(),
 		"contains":     interpolationFuncContains(),
+		"first":        interpolationFuncFirst(),
 		"dirname":      interpolationFuncDirname(),
 		"distinct":     interpolationFuncDistinct(),
 		"element":      interpolationFuncElement(),
@@ -86,6 +87,7 @@ func Funcs() map[string]ast.Function {
 		"list":         interpolationFuncList(),
 		"log":          interpolationFuncLog(),
 		"lower":        interpolationFuncLower(),
+		"lookuplist":   interpolationFuncLookupList(),
 		"map":          interpolationFuncMap(),
 		"max":          interpolationFuncMax(),
 		"md5":          interpolationFuncMd5(),
@@ -671,6 +673,21 @@ func interpolationFuncFormatList() ast.Function {
 
 // interpolationFuncIndex implements the "index" function that allows one to
 // find the index of a specific element in a list
+func interpolationFuncFirst() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeList},
+		ReturnType: ast.TypeString,
+		Callback: func(args []interface{}) (interface{}, error) {
+			haystack := args[0].([]ast.Variable)
+			//needle := args[1].(int)
+			return haystack[0].Value, nil
+			//return nil, fmt.Errorf("Could not find '%s' in '%s'", needle, haystack)
+		},
+	}
+}
+
+// interpolationFuncIndex implements the "index" function that allows one to
+// find the index of a specific element in a list
 func interpolationFuncIndex() ast.Function {
 	return ast.Function{
 		ArgTypes:   []ast.Type{ast.TypeList, ast.TypeString},
@@ -742,6 +759,20 @@ func appendIfMissing(slice []string, element string) []string {
 
 // for two lists `keys` and `values` of equal length, returns all elements
 // from `values` where the corresponding element from `keys` is in `searchset`.
+func interpolationFuncLookupList() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeList, ast.TypeString},
+		ReturnType: ast.TypeList,
+		Callback: func(args []interface{}) (interface{}, error) {
+			output := make([]ast.Variable, 0)
+			values, _ := args[0].([]ast.Variable)
+			keys, _ := args[1].(int)
+
+			output = append(output, values[keys])
+			return output,nil
+		},
+	}
+}
 func interpolationFuncMatchKeys() ast.Function {
 	return ast.Function{
 		ArgTypes:   []ast.Type{ast.TypeList, ast.TypeList, ast.TypeList},
@@ -1089,7 +1120,7 @@ func interpolationFuncElement() ast.Function {
 
 			v := list[resolvedIndex]
 			if v.Type != ast.TypeString {
-				return nil, fmt.Errorf(
+					return nil, fmt.Errorf(
 					"element() may only be used with flat lists, this list contains elements of %s",
 					v.Type.Printable())
 			}

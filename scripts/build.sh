@@ -9,6 +9,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
 
 # Change into that directory
 cd "$DIR"
+echo $DIR
 
 # Get the git commit
 GIT_COMMIT=$(git rev-parse HEAD)
